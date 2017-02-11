@@ -23,19 +23,7 @@
 #import "WVSSAddress.h"
 
 // ScreenSaverDefaults module name.
-static NSString * const kScreenSaverName = @"WebViewScreenSaver";
-// Default intervals.
-static NSTimeInterval const kOneMinute = 60.0;
-
-
-@interface WebViewScreenSaverView () <WVSSConfigControllerDelegate>
-// Timer callback that loads the next URL in the URL list.
-- (void)loadNext:(NSTimer *)timer;
-// Returns the URL for the index in the preferences.
-- (NSString *)urlForIndex:(NSInteger)index;
-// Returns the time interval in the preferences.
-- (NSTimeInterval)timeIntervalForIndex:(NSInteger)index;
-@end
+static NSString * const kScreenSaverName = @"LeisureQScreenSaver";
 
 
 @implementation WebViewScreenSaverView {
@@ -63,10 +51,6 @@ static NSTimeInterval const kOneMinute = 60.0;
 
     _currentIndex = 0;
     _isPreview = isPreview;
-
-    // Load state from the preferences.
-    self.configController = [[WVSSConfigController alloc] initWithUserDefaults:prefs];
-    self.configController.delegate = self;
   }
   return self;
 }
@@ -79,30 +63,6 @@ static NSTimeInterval const kOneMinute = 60.0;
   [_webView close];
   [_timer invalidate];
   _timer = nil;
-}
-
-#pragma mark - Configure Sheet
-
-- (BOOL)hasConfigureSheet {
-  return YES;
-}
-
-//- (void)setFrame:(NSRect)frameRect {
-//  [super setFrame:frameRect];
-//}
-
-- (NSWindow *)configureSheet {
-  return [self.configController configureSheet];
-}
-
-- (void)configController:(WVSSConfigController *)configController dismissConfigSheet:(NSWindow *)sheet {
-  if (_isPreview) {
-    [self loadFromStart];
-  }
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-  [[NSApplication sharedApplication] endSheet:sheet];
-#pragma GCC diagnostic pop
 }
 
 #pragma mark ScreenSaverView
@@ -127,9 +87,7 @@ static NSTimeInterval const kOneMinute = 60.0;
   NSColor *color = [NSColor colorWithCalibratedWhite:0.0 alpha:1.0];
   [[_webView layer] setBackgroundColor:color.CGColor];
 
-  if (!_isPreview && _currentIndex < [[self selectedURLs] count]) {
-    [self loadFromStart];
-  }
+  [self loadFromStart];
 }
 
 - (void)stopAnimation {
@@ -144,48 +102,7 @@ static NSTimeInterval const kOneMinute = 60.0;
 #pragma mark Loading URLs
 
 - (void)loadFromStart {
-  NSTimeInterval duration = [WVSSAddress defaultDuration];
-  NSString *url = [WVSSAddress defaultAddressURL];
-  _currentIndex = 0;
-
-  if ([[self selectedURLs] count]) {
-    duration = [self timeIntervalForIndex:_currentIndex];
-    url = [self urlForIndex:_currentIndex];
-  }
-
-  [self loadURLThing:url];
-  [_timer invalidate];
-  _timer = [NSTimer scheduledTimerWithTimeInterval:duration
-                                            target:self
-                                          selector:@selector(loadNext:)
-                                          userInfo:nil
-                                           repeats:NO];
-}
-
-- (void)loadNext:(NSTimer *)timer {
-  NSTimeInterval duration = [WVSSAddress defaultDuration];
-  NSString *url = [WVSSAddress defaultAddressURL];
-  NSInteger nextIndex = _currentIndex;
-
-  // Last element, fetchURLs if they exist.
-  if (_currentIndex == [[self selectedURLs] count] - 1) {
-    [self.configController fetchAddresses];
-  }
-
-  // Progress the URL counter.
-  if ([[self selectedURLs] count] > 0) {
-    nextIndex = (_currentIndex + 1) % [[self selectedURLs] count];
-    duration = [self timeIntervalForIndex:nextIndex];
-    url = [self urlForIndex:nextIndex];
-  }
-  [self loadURLThing:url];
-  [_timer invalidate];
-  _timer = [NSTimer scheduledTimerWithTimeInterval:duration
-                                            target:self
-                                          selector:@selector(loadNext:)
-                                          userInfo:nil
-                                           repeats:NO];
-  _currentIndex = nextIndex;
+  [self loadURLThing:@"https://leisureq.github.io/gajago-screensaver/"];
 }
 
 - (void)loadURLThing:(NSString *)url {
@@ -199,25 +116,6 @@ static NSTimeInterval const kOneMinute = 60.0;
     [_webView stringByEvaluatingJavaScriptFromString:url];
   } else {
     [_webView setMainFrameURL:url];
-  }
-}
-
-- (NSArray *)selectedURLs {
-  return self.configController.addresses;
-}
-
-
-- (NSString *)urlForIndex:(NSInteger)index {
-  WVSSAddress *address = [self.configController.addresses objectAtIndex:index];
-  return address.url;
-}
-
-- (NSTimeInterval)timeIntervalForIndex:(NSInteger)index {
-  WVSSAddress *address = [self.configController.addresses objectAtIndex:index];
-  if (address) {
-    return (NSTimeInterval)address.duration;
-  } else {
-    return kOneMinute;
   }
 }
 
