@@ -24,6 +24,7 @@
 
 // ScreenSaverDefaults module name.
 static NSString * const kScreenSaverName = @"LeisureQScreenSaver";
+static NSString * const url = @"https://leisureq.github.io/gajago-screensaver/";
 
 
 @implementation WebViewScreenSaverView {
@@ -102,7 +103,7 @@ static NSString * const kScreenSaverName = @"LeisureQScreenSaver";
 #pragma mark Loading URLs
 
 - (void)loadFromStart {
-  [self loadURLThing:@"https://leisureq.github.io/gajago-screensaver/"];
+  [self loadURLThing:url];
 }
 
 - (void)loadURLThing:(NSString *)url {
